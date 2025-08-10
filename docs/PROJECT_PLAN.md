@@ -33,7 +33,7 @@ SkyBrain transforms the original DJI Mavic Pro into an intelligent cinematograph
 #### Week 2: Core SDK Integration
 - [ ] Complete DjiBridge.kt implementation
 - [ ] VirtualStickLoop refinement and testing
-- [ ] FlightStateManager implementation
+- [ ] FlightStateStore implementation
 - [ ] Telemetry processing pipeline
 - [ ] Simulator integration and validation
 
@@ -65,7 +65,7 @@ SkyBrain transforms the original DJI Mavic Pro into an intelligent cinematograph
 - [ ] LookThenGo policy implementation
 - [ ] OaClamp velocity limiting
 - [ ] VerticalCaution system
-- [ ] CommandMixer integration
+- [ ] CommandMixer + FeatureBuilder integration
 - [ ] Policy testing and validation
 
 #### Week 7: Neural Network Integration

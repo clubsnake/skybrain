@@ -12,15 +12,17 @@ Safety-first Android Kotlin app that layers intelligent policy + Liquid Neural N
 ## Module Architecture
 
 ### SDK Layer (`com.armand.skybrain.sdk`)
-- **DjiBridge.kt**: Core DJI Mobile SDK v4.x integration
-  - Status management (Disconnected/Connecting/Connected)
-  - Virtual Stick mode enablement
-  - Body-frame velocity commands (roll, pitch, yaw_rate, throttle)
-- **VirtualStickLoop.kt**: 25 Hz command sender with watchdog
-  - Coroutine-based sender loop
-  - Watchdog protection (200ms timeout)
-  - Command provider abstraction
-- **FlightStateManager.kt**: State estimation and telemetry processing
+    - **DjiBridge.kt**: Core DJI Mobile SDK v4.x integration
+      - Status management (Disconnected/Connecting/Connected)
+      - Virtual Stick mode enablement/disablement
+      - Body‑frame velocity commands (roll, pitch, yaw_rate, throttle)
+      - Starts the flight state listener upon connection
+    - **VirtualStickLoop.kt**: 25 Hz command sender with heartbeat watchdog
+      - Coroutine-based sender loop; stops on exceptions or >200 ms latency
+      - Command provider abstraction
+    - **FlightStateStore.kt**: Telemetry processing
+      - Provides a `StateFlow<FlightState>` with lat/lon/alt, body‑frame velocities, attitude, GPS fix, vision validity, obstacle distance, and light proxy
+      - Hooks into the DJI flight controller via `startListening`
 
 ### Safety Layer (`com.armand.skybrain.safety`)
 - **KillSwitch.kt**: Emergency stop mechanism
@@ -35,18 +37,25 @@ Safety-first Android Kotlin app that layers intelligent policy + Liquid Neural N
   - Cost inflation for safe navigation
 
 ### Policy Layer (`com.armand.skybrain.policy`)
-- **LnnPolicy.kt**: Neural network inference
-  - TensorFlow Lite wrapper
-  - NavLNN input/output mapping
-  - Confidence scoring
-- **LookThenGo.kt**: Look-first navigation policy
-- **OaClamp.kt**: Obstacle avoidance velocity clamping
+    - **LnnPolicy.kt**: Neural network inference
+      - TensorFlow Lite wrapper (gracefully handles null interpreter)
+      - Maps NavLNN raw outputs to typed caps (v_cap_fwd, v_cap_lat, etc.)
+      - Returns conservative defaults if no model present
+    - **LookThenGo.kt**: Look‑first navigation policy
+      - Blocks lateral/back motion until yaw scan is complete when OA is valid
+    - **OaClamp.kt**: Obstacle avoidance velocity clamping
+      - Reduces forward speed based on time‑to‑collision; hard stop if TTC < 1 s
+    - **CommandMixer.kt**: Safety & policy combiner
+      - Applies Look‑then‑Go, OaClamp, and NavLNN caps to produce final stick commands
+    - **FeatureBuilder.kt**: NavLNN feature construction
+      - Converts `FlightState` and desired command into the input feature vector defined in `policy_io.md`
 
 ### UI Layer (`com.armand.skybrain.ui`)
-- **MainActivity.kt**: Jetpack Compose interface
-  - DJI initialization controls
-  - Simulator controls
-  - Virtual Stick sliders for manual control
+    - **MainActivity.kt**: Jetpack Compose interface
+      - DJI initialization controls, VS enable/disable, simulator controls
+      - Status display and watchdog toasts
+      - Sliders for forward/back (vx), left/right (vy), vertical (vz), and yaw rate
+      - Calls into the policy layer to build NavLNN features, run inference, mix commands, and send via VS
 
 ### Training Infrastructure (`training/`)
 - **pytorch/ltc_cell.py**: Liquid Time-Constant cell implementation
@@ -57,11 +66,13 @@ Safety-first Android Kotlin app that layers intelligent policy + Liquid Neural N
 ## Data Flow Architecture
 
 ```
-DJI Telemetry → FlightStateManager → Policy Layer → Virtual Stick Commands
-                      ↓                    ↓
-                 MapGrid Update     LNN Inference
-                      ↓                    ↓
-                Safety Validation → Command Mixing → DjiBridge → Aircraft
+DJI Telemetry → FlightStateStore → Nav Feature Builder → LNN Inference
+                      ↓                                 ↓
+               MapGrid Update (future)            LookThenGo
+                      ↓                                 ↓
+               VerticalCaution (TODO) ← OaClamp ← CommandMixer → Virtual Stick
+                                                     ↓
+                                                 DjiBridge → Aircraft
 ```
 
 ## Timing Specifications

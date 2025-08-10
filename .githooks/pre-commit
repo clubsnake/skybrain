@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# SkyBrain Pre-commit Hook
+# Ensures code quality before commits
+
+echo "🔍 Running SkyBrain pre-commit checks..."
+
+# Change to project root
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+# Run the quality check script
+if ! ./tools/check.sh; then
+    echo ""
+    echo "❌ Pre-commit checks failed!"
+    echo "   Fix the issues above before committing."
+    echo "   You can also run './tools/check.sh' manually."
+    exit 1
+fi
+
+# Check for commits to safety-critical files
+safety_critical_files=(
+    "app/src/main/java/com/armand/skybrain/safety/"
+    "app/src/main/java/com/armand/skybrain/sdk/VirtualStickLoop.kt"
+    "app/src/main/java/com/armand/skybrain/sdk/DjiBridge.kt"
+    "docs/SAFETY.md"
+)
+
+# Get list of staged files
+staged_files=$(git diff --cached --name-only)
+
+for file in $staged_files; do
+    for critical_path in "${safety_critical_files[@]}"; do
+        if [[ $file == *"$critical_path"* ]]; then
+            echo ""
+            echo "⚠️  WARNING: Modifying safety-critical file: $file"
+            echo "   Please ensure:"
+            echo "   • Changes have been reviewed by a second person"
+            echo "   • Safety envelope is maintained"
+            echo "   • No watchdogs or kill switches are disabled"
+            echo "   • ADR is created for significant changes"
+            echo ""
+            # Non-interactive mode: if not a TTY or explicitly requested, do not block the commit
+            if [ ! -t 1 ] || [ "${GIT_HOOKS_NON_INTERACTIVE:-0}" = "1" ]; then
+                echo "(non-interactive) Proceeding without prompt. Set GIT_HOOKS_NON_INTERACTIVE=0 to enable prompt."
+                break
+            fi
+            read -p "Continue with commit? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo "Commit cancelled."
+                exit 1
+            fi
+            break
+        fi
+    done
+done
+
+# Check commit message format (basic check)
+if [ -f ".git/COMMIT_EDITMSG" ]; then
+    commit_msg=$(head -n 1 .git/COMMIT_EDITMSG)
+    if [[ ${#commit_msg} -lt 10 ]]; then
+        echo "❌ Commit message too short (minimum 10 characters)"
+        exit 1
+    fi
+fi
+
+echo "✅ Pre-commit checks passed!"

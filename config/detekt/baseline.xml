@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ForbiddenComment:DjiBridge.kt$DjiBridge$// TODO: DJISDKManager.getInstance().registerApp(...)</ID>
+    <ID>ForbiddenComment:DjiBridge.kt$DjiBridge$// TODO: flightController?.sendVirtualStickFlightControlData(...)</ID>
+    <ID>ForbiddenComment:DjiBridge.kt$DjiBridge$// TODO: flightController?.setVirtualStickModeEnabled(enable, ...)</ID>
+    <ID>ForbiddenComment:LnnPolicy.kt$LnnPolicy$// TODO: run TFLite and map outputs</ID>
+    <ID>ForbiddenComment:LookThenGo.kt$LookThenGo$// TODO: yaw-align before lateral/back moves</ID>
+    <ID>ForbiddenComment:MainActivity.kt$/* TODO: register DJI + enable VS */</ID>
+    <ID>ForbiddenComment:MainActivity.kt$/* TODO: start sim */</ID>
+    <ID>ForbiddenComment:MainActivity.kt$/* TODO: stop sim */</ID>
+    <ID>ForbiddenComment:OaClamp.kt$OaClamp$// TODO: distance/TTC curve → slow down forward speed smoothly</ID>
+    <ID>FunctionOnlyReturningConstant:MapGrid.kt$MapGrid$fun costAhead(): Float</ID>
+    <ID>MagicNumber:LnnPolicy.kt$LnnPolicy$0.1f</ID>
+    <ID>MagicNumber:LnnPolicy.kt$LnnPolicy$0.5f</ID>
+    <ID>MagicNumber:LnnPolicy.kt$LnnPolicy$0.9f</ID>
+    <ID>MagicNumber:LnnPolicy.kt$LnnPolicy$1.5f</ID>
+    <ID>MagicNumber:LnnPolicy.kt$LnnPolicy$25f</ID>
+    <ID>MagicNumber:LnnPolicy.kt$LnnPolicy$4f</ID>
+    <ID>MagicNumber:MapGrid.kt$MapGrid$0.01f</ID>
+    <ID>MagicNumber:MapGrid.kt$MapGrid$0x1FFFFF</ID>
+    <ID>MagicNumber:MapGrid.kt$MapGrid$21</ID>
+    <ID>MagicNumber:MapGrid.kt$MapGrid$42</ID>
+    <ID>MagicNumber:VirtualStickLoop.kt$VirtualStickLoop$50L</ID>
+    <ID>UnusedParameter:DjiBridge.kt$DjiBridge$appKey: String</ID>
+    <ID>UnusedParameter:DjiBridge.kt$DjiBridge$enable: Boolean</ID>
+    <ID>UnusedParameter:DjiBridge.kt$DjiBridge$pitch: Float</ID>
+    <ID>UnusedParameter:DjiBridge.kt$DjiBridge$roll: Float</ID>
+    <ID>UnusedParameter:DjiBridge.kt$DjiBridge$throttle: Float</ID>
+    <ID>UnusedParameter:DjiBridge.kt$DjiBridge$yawRate: Float</ID>
+    <ID>UnusedParameter:LnnPolicy.kt$LnnPolicy$inp: Inputs</ID>
+    <ID>UnusedParameter:LookThenGo.kt$LookThenGo$state: FlightState</ID>
+    <ID>UnusedParameter:OaClamp.kt$OaClamp$oaDistM: Float</ID>
+    <ID>UnusedPrivateMember:MapGrid.kt$MapGrid$private fun key( x: Int, y: Int, z: Int, )</ID>
+    <ID>UnusedPrivateProperty:LnnPolicy.kt$LnnPolicy$private val tflite: Interpreter?</ID>
+  </CurrentIssues>
+</SmellBaseline>

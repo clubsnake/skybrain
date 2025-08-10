@@ -1,0 +1,1 @@
+# SkyBrain — Milestone 0 skeleton\n\nOpen in Android Studio, sync Gradle, insert DJI App Key, and run the DJISimulator tutorial steps.

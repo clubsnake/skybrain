@@ -1,0 +1,63 @@
+=== AGENT.md ===
+
+=== ARCHITECTURE-current.md ===
+# SkyBrain — Architecture (Current)
+
+## Purpose
+Safety-first Android app that layers a policy + Liquid Neural Networks (LNNs) on top of DJI stabilization via Virtual Stick for the original Mavic Pro.
+
+## Modules
+- **sdk/**: DJI bridge, VirtualStickLoop (25 Hz), Flight state.
+- **safety/**: KillSwitch, GeoFence, Battery/Link guards, Light/Power governors.
+- **perception/**: Flow/looming, local ENU MapGrid (p_occ + sigma + inflated cost), MapStore (global tiles).
+- **policy/**: LookThenGo, OaClamp (TTC slowdown), VerticalCaution (rule-based), CommandMixer, LnnPolicy (TFLite).
+- **capture/**: ShotLibrary (Orbit, DollyInReveal), CameraProfiles, MediaManager.
+- **learning/**: DataLogger (protobuf), DatasetWriter.
+- **ui/**: Pilot screen (init, sim, VS sliders).
+
+## Timing
+- **Sender**: VirtualStickLoop @ 25 Hz (40 ms). 
+- **Compute**: adaptive 10–20 Hz; monocular depth (future) ≤5 Hz.
+- **Watchdogs**: inbound (heartbeat), outbound (DJI braking/att-limited).
+
+## Dataflow
+1. DJI telemetry + video → FlightState + Luma frames.
+2. Perception extracts flow/looming; MapGrid integrates & inflates cost.
+3. Policy builds features → LNN (NavLNN) → caps/scan/ramp → CommandMixer.
+4. VirtualStickLoop sends body-frame velocities + yaw_rate.
+5. Safety can clamp/override at any point.
+
+## Interfaces
+See `contracts/telemetry.md` and `contracts/policy_io.md`.
+
+=== contracts/telemetry.md ===
+# Telemetry Contract (excerpt)
+
+```json
+{
+  "t": 1723232334.215,
+  "gps": {"lat": 41.923, "lon": -73.90, "alt_m": 78.2, "fix": 4, "h_acc_m": 0.8},
+  "att": {"yaw_deg": 132.4, "pitch_deg": 3.1, "roll_deg": -1.2},
+  "vel": {"vx": 2.1, "vy": 0.0, "vz": -0.2},
+  "oa": {"forward_warn": 1, "dist_m": 8.7, "valid": true},
+  "light_proxy": 0.42
+}
+```
+
+=== contracts/policy_io.md ===
+# Policy I/O
+
+## Inputs (NavLNN)
+`[vx, vy, vz, yaw_rate, yaw, tilt, gps_fix, vps_valid, oa_dist, TTC, wind_mag, wind_dir_rel, light_proxy, cost_ahead, cost_left, cost_right, height_headroom, mission_progress, desired_speed]`
+
+## Outputs (NavLNN)
+`{ v_cap_fwd, v_cap_lat, v_cap_vert, yaw_rate_cap, scan_prob, ramp_gain, confidence }`
+
+=== SAFETY.md ===
+# Safety Envelope
+
+- Always test in simulator first (props off).
+- LOS, open field, low speed caps for first flights.
+- Dual watchdogs: inbound heartbeat, outbound braking detector.
+- Sport mode disabled during autonomy (OA reduced/disabled on Mavic Pro).
+- RTH altitude = site max height_hint + margin.

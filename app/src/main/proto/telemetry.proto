@@ -1,0 +1,24 @@
+syntax = "proto3";
+package com.armand.skybrain.proto;
+option java_multiple_files = true;
+option java_package = "com.armand.skybrain.proto";
+option java_outer_classname = "TelemetryProtos";
+
+message FlightTelemetry {
+  fixed64 timestamp_ns = 1;
+  double lat = 2;
+  double lon = 3;
+  float alt_m = 4;
+  float vx = 5;
+  float vy = 6;
+  float vz = 7;
+  float yaw_deg = 8;
+  float pitch_deg = 9;
+  float roll_deg = 10;
+  int32 gps_fix = 11;
+  bool vps_valid = 12;
+  bool oa_valid = 13;
+  float oa_dist_m = 14;
+  float light_proxy = 15;
+  repeated float lnn_outputs = 16;
+}

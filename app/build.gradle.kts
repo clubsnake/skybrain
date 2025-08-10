@@ -1,0 +1,134 @@
+import java.util.Properties // Added import
+
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.protobuf")
+    id("io.gitlab.arturbosch.detekt") version "1.23.4"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+}
+
+android {
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+    namespace = "com.armand.skybrain"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.armand.skybrain"
+        minSdk = 26
+        targetSdk = 34
+        versionCode = 1
+        versionName = "0.1.0"
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+        }
+        debug {
+            isDebuggable = true
+        }
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
+    composeOptions {
+        // Compose Compiler managed by Kotlin Compose plugin (org.jetbrains.kotlin.plugin.compose)
+        // Keeping version for IDE; plugin will align compiler.
+        kotlinCompilerExtensionVersion = "1.6.11"
+    }
+
+    packaging {
+        resources.excludes += setOf("META-INF/INDEX.LIST", "META-INF/LICENSE*", "META-INF/*.kotlin_module")
+    }
+
+    // Inject DJI API Key from local.properties via manifest placeholders
+    val localProps = Properties() // Changed to use imported Properties
+    val localPropsFile = rootProject.file("local.properties")
+    if (localPropsFile.exists()) {
+        localProps.load(localPropsFile.inputStream())
+    }
+    val djiApiKey = localProps.getProperty("DJI_API_KEY", "REPLACE_WITH_YOUR_APP_KEY")
+    defaultConfig.manifestPlaceholders["DJI_API_KEY"] = djiApiKey
+}
+
+// Align Kotlin/Javac targets and use toolchain (JDK 21)
+kotlin {
+    jvmToolchain(21)
+}
+
+dependencies {
+    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("com.google.android.material:material:1.12.0")
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // TFLite
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
+
+    // DJI Mobile SDK v4.x (Mavic Pro supported)
+    implementation("com.dji:dji-sdk:4.18")
+    compileOnly("com.dji:dji-sdk-provided:4.18")
+
+    // Optional: UX SDK widgets (uncomment if you want them)
+    // implementation("com.dji:dji-uxsdk:4.16.2")
+
+    // Protobuf lite
+    implementation("com.google.protobuf:protobuf-javalite:3.25.3")
+}
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:3.25.3" }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") { option("lite") }
+            }
+        }
+    }
+}
+
+// Static Analysis Configuration
+detekt {
+    toolVersion = "1.23.4"
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    allRules = false
+    source.setFrom(files("src/main/java", "src/main/kotlin"))
+    parallel = true
+    autoCorrect = false
+    baseline = rootProject.file("config/detekt/baseline.xml")
+}
+
+ktlint {
+    version.set("1.0.1")
+    debug.set(false)
+    verbose.set(true)
+    android.set(true)
+    outputToConsole.set(true)
+    ignoreFailures.set(false)
+    enableExperimentalRules.set(false)
+}
+
+// Quality Gates
+tasks.register("qualityCheck") {
+    dependsOn("ktlintCheck", "detekt")
+    group = "verification"
+    description = "Run all quality checks"
+}
+
+// Note: path exclusions for sourceSets or copy tasks are not needed currently

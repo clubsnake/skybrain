@@ -1,0 +1,23 @@
+# Android/Gradle
+/.gradle/
+/build/
+/app/build/
+/app/.cxx/
+/local.properties
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python (training)
+training/**/__pycache__/
+training/**/.pytest_cache/
+training/**/.venv/
+training/**/.mypy_cache/
+
+# Generated
+**/generated/**
